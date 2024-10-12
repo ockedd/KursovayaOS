@@ -73,6 +73,15 @@ class Program
 
 
                     case "SEND_FILE":
+                        if (clients[userName].PartnerUserName == null) // Проверка на наличие подключения к партнеру
+
+                        {
+
+                            await writer.WriteLineAsync("ERROR: Вы не можете отправлять файлы, пока не выберете партнера.");
+
+                            break;
+
+                        }
                         string fileName = message;
 
                         // Чтение размера файла из потока данных
