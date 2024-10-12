@@ -1,4 +1,5 @@
 ﻿using Client1;
+using Client1.Properties;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -134,10 +135,15 @@ namespace Client1
                         {
                             richTextBox1.AppendText(message + Environment.NewLine);
 
+                            // Если сообщение содержит информацию о полученном файле
+                            if (message.StartsWith("Получен файл: "))
+                            {
+                                string fileName = message.Substring("Получен файл: ".Length);
+                                listBox1.Items.Add(fileName); // Добавление имени файла в ListBox
+                            }
                         }));
                     }
                     else
-
                     {
                         break;
                     }
@@ -149,10 +155,7 @@ namespace Client1
             }
         }
 
-        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            SendDisconnectMessage();
-        }
+       
 
         private async void SendDisconnectMessage()
         {
@@ -193,7 +196,10 @@ namespace Client1
                 textBox1.Clear();
             }
         }
-
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            SendDisconnectMessage();
+        }
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
 
@@ -235,6 +241,7 @@ namespace Client1
                     }
 
                     richTextBox1.AppendText($"Файл {fileName} был отправлен.\n");
+                    listBox1.Items.Add(fileName);
 
                 }
             }
@@ -257,7 +264,58 @@ namespace Client1
         {
             
         }
-    } 
+
+
+
+
+        private void textBox3_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+
+
+        private void label2_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private async void listBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (listBox1.SelectedItem != null)
+            {
+                string fileName = listBox1.SelectedItem.ToString();
+
+                // Открываем диалоговое окно сохранения файла
+                using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+                {
+                    saveFileDialog.FileName = fileName; // Установить имя файла по умолчанию
+                    saveFileDialog.Filter = "All files (*.*)|*.*"; // Установить фильтр файлов по типу
+
+                    if (saveFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        string savePath = saveFileDialog.FileName;
+                        await writer.WriteLineAsync($"REQUEST_FILE {fileName}");
+                        richTextBox1.AppendText($"Запрос на файл {fileName} отправлен.\n");
+
+                        // В ожидании получения файла с сервера
+                        byte[] buffer = new byte[1024];
+                        using (var fileStream = new FileStream(savePath, FileMode.Create, FileAccess.Write))
+                        {
+                            int bytesRead;
+                            while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                            {
+                                await fileStream.WriteAsync(buffer, 0, bytesRead);
+                            }
+                        }
+
+                        MessageBox.Show($"Файл {fileName} был успешно сохранен.");
+                    }
+                }
+            }
+        }
+
     }
+}
 
 
