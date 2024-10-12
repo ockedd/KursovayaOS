@@ -38,6 +38,7 @@ namespace Client1
         {
             using (var userNameForm = new Form())
             {
+                userNameForm.ShowInTaskbar = false;
                 bool _userConfirmed = false;
                 userNameForm.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
                 userNameForm.TopMost = true;
@@ -217,36 +218,68 @@ namespace Client1
         }
 
         private async void button4_Click(object sender, EventArgs e)
+
         {
+
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
+
             {
-                openFileDialog.InitialDirectory = "c:\\"; // Папка по умолчанию
-                openFileDialog.Filter = "All files (*.*)|*.*"; // Фильтр по типу файлов
+
+                openFileDialog.InitialDirectory = "c:\\";
+
+                openFileDialog.Filter = "All files (*.*)|*.*";
+
                 openFileDialog.Title = "Выберите файл для отправки";
 
+
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
+
                 {
+
                     string filePath = openFileDialog.FileName;
+
+                    FileInfo fileInfo = new FileInfo(filePath);
+
+                    const long maxFileSize = 10 * 1024 * 1024; // 10 МБ
+
+
+                    if (fileInfo.Length > maxFileSize)
+
+                    {
+
+                        MessageBox.Show($"Ошибка: Файл слишком большой. Максимально допустимый размер - 10 МБ.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                        return;
+
+                    }
+
 
                     string fileName = Path.GetFileName(filePath);
 
                     await writer.WriteLineAsync($"SEND_FILE {fileName}");
 
-                    using (var fileStream = File.OpenRead(filePath))
+
+                    // Отправка файла
+                    int bufferSize = 10485760;
+                    using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
 
                     {
 
-                        await fileStream.CopyToAsync(stream);
+                        await fileStream.CopyToAsync(stream, bufferSize);
 
                     }
 
+
                     richTextBox1.AppendText($"Файл {fileName} был отправлен.\n");
+
                     listBox1.Items.Add(fileName);
 
                 }
+
             }
+
         }
-       
+
         private async void button5_Click(object sender, EventArgs e)
         {
             string partnerUserName = textBox2.Text;
@@ -299,7 +332,7 @@ namespace Client1
                         richTextBox1.AppendText($"Запрос на файл {fileName} отправлен.\n");
 
                         // В ожидании получения файла с сервера
-                        byte[] buffer = new byte[1024];
+                        byte[] buffer = new byte[1048];
                         using (var fileStream = new FileStream(savePath, FileMode.Create, FileAccess.Write))
                         {
                             int bytesRead;

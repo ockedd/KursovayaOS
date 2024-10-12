@@ -72,9 +72,9 @@ class Program
 
                     case "SEND_FILE":
 
-                        var fileName = message; // получаем имя файла
+                        // Чтение файла от клиента
 
-                        var buffer = new byte[1024]; // размер буфера
+                        var buffer = new byte[1048576]; // 1 МБ
 
                         int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
 
@@ -82,14 +82,14 @@ class Program
 
                         {
 
-                            await ReceiveFileAsync(userName, fileName, ms);
+                            await ReceiveFileAsync(userName, message, ms);
 
                         }
 
                         break;
 
                     case "REQUEST_FILE":
-                        await SendFileToClient(userName, message);
+                       // await SendFileToClient(userName, message);
                         break;
                     case "DISCONNECT":
                         Console.WriteLine($"Клиент {userName} отключился.");
@@ -107,75 +107,30 @@ class Program
 
     private static async Task SendFileToClient(string userName, string fileName)
     {
-        var partnerUserName = clients[userName].PartnerUserName;
-        if (partnerUserName != null && clients.ContainsKey(partnerUserName))
-        {
-            string directoryPath = @"C:\Users\Danilka\source\repos\KursovayaOC\Server\Files"; // Укажите свой путь
-            string fullPath = Path.Combine(directoryPath, fileName);
-
-            if (File.Exists(fullPath))
-            {
-                var buffer = new byte[1024];
-                using (var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read))
-                {
-                    int bytesRead;
-                    while ((bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length)) > 0)
-                    {
-                        await clients[userName].Writer.BaseStream.WriteAsync(buffer, 0, bytesRead);
-                    }
-                }
-            }
-            else
-            {
-                await clients[userName].Writer.WriteLineAsync("ERROR: Файл не найден.");
-            }
-        }
-        else
-        {
-            await clients[userName].Writer.WriteLineAsync("ERROR: Нет подключенного партнёра.");
-        }
+       
     }
 
     private static async Task ReceiveFileAsync(string userName, string fileName, Stream fileStream)
 
     {
+        int bufferSize = 10485760;
+        string filePath = Path.Combine("C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\Server\\Files", fileName); // Директория для сохранения файлов
 
-        var partnerUserName = clients[userName].PartnerUserName;
-
-
-        if (partnerUserName != null && clients.ContainsKey(partnerUserName))
-
-        {
-
-            // Задайте ваш путь к папке
-
-            string directoryPath = @"C:\Users\Danilka\source\repos\KursovayaOC\Server\Files"; // Укажите свой путь
-
-            string fullPath = Path.Combine(directoryPath, fileName);
+        Directory.CreateDirectory("C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\Server\\Files"); // Создаем директорию, если она не существует
 
 
-            using (var fs = new FileStream(fullPath, FileMode.Create, FileAccess.Write))
-
-            {
-
-                await fileStream.CopyToAsync(fs);
-
-            }
-
-
-            await NotifyFileReceived(userName, fileName);
-
-        }
-
-        else
+        using (var fileStreamToSave = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
 
         {
 
-            await clients[userName].Writer.WriteLineAsync("ERROR: Нет подключенного партнёра.");
+            await fileStream.CopyToAsync(fileStreamToSave);
 
         }
+
+        await NotifyFileReceived(userName, fileName);
 
     }
+
 
     private static async Task NotifyFileReceived(string userName, string fileName)
     {
