@@ -221,7 +221,21 @@ namespace Client1
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     string filePath = openFileDialog.FileName;
-                   
+
+                    string fileName = Path.GetFileName(filePath);
+
+                    await writer.WriteLineAsync($"SEND_FILE {fileName}");
+
+                    using (var fileStream = File.OpenRead(filePath))
+
+                    {
+
+                        await fileStream.CopyToAsync(stream);
+
+                    }
+
+                    richTextBox1.AppendText($"Файл {fileName} был отправлен.\n");
+
                 }
             }
         }

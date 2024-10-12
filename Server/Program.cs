@@ -70,7 +70,23 @@ class Program
                         await SendMessageAsync(userName, message);
                         break;
 
+                    case "SEND_FILE":
 
+                        var fileName = message; // получаем имя файла
+
+                        var buffer = new byte[1024]; // размер буфера
+
+                        int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+
+                        using (var ms = new MemoryStream(buffer, 0, bytesRead))
+
+                        {
+
+                            await ReceiveFileAsync(userName, fileName, ms);
+
+                        }
+
+                        break;
                     case "DISCONNECT":
                         Console.WriteLine($"Клиент {userName} отключился.");
                         await NotifyPartnerDisconnection(userName);
@@ -85,7 +101,55 @@ class Program
         }
     }
 
+    private static async Task ReceiveFileAsync(string userName, string fileName, Stream fileStream)
 
+    {
+
+        var partnerUserName = clients[userName].PartnerUserName;
+
+
+        if (partnerUserName != null && clients.ContainsKey(partnerUserName))
+
+        {
+
+            // Задайте ваш путь к папке
+
+            string directoryPath = @"C:\Users\Danilka\source\repos\KursovayaOC\Server\Files"; // Укажите свой путь
+
+            string fullPath = Path.Combine(directoryPath, fileName);
+
+
+            using (var fs = new FileStream(fullPath, FileMode.Create, FileAccess.Write))
+
+            {
+
+                await fileStream.CopyToAsync(fs);
+
+            }
+
+
+            await NotifyFileReceived(userName, fileName);
+
+        }
+
+        else
+
+        {
+
+            await clients[userName].Writer.WriteLineAsync("ERROR: Нет подключенного партнёра.");
+
+        }
+
+    }
+
+    private static async Task NotifyFileReceived(string userName, string fileName)
+    {
+        var partnerUserName = clients[userName].PartnerUserName;
+        if (partnerUserName != null && clients.ContainsKey(partnerUserName))
+        {
+            await clients[partnerUserName].Writer.WriteLineAsync($"Вы получили: {fileName} от {userName}.");
+        }
+    }
     private static async Task<string> SetNameAsync(StreamWriter writer, string name)
     {
         string userName = name.Trim();
