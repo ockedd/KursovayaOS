@@ -70,23 +70,36 @@ class Program
                         await SendMessageAsync(userName, message);
                         break;
 
+
+
                     case "SEND_FILE":
+                        string fileName = message;
 
-                        // Чтение файла от клиента
+                        // Чтение размера файла из потока данных
+                        byte[] sizeBuffer = new byte[8];
+                        await stream.ReadAsync(sizeBuffer, 0, sizeBuffer.Length);
+                        long fileSize = BitConverter.ToInt64(sizeBuffer, 0);
 
-                        var buffer = new byte[1048576]; // 1 МБ
+                        // Подготовка для сохранения файла
+                        var buffer = new byte[4096]; // Размер буфера для передачи
 
-                        int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-
-                        using (var ms = new MemoryStream(buffer, 0, bytesRead))
-
+                        using (var ms = new MemoryStream())
                         {
+                            int bytesRead;
+                            long totalRead = 0;
 
-                            await ReceiveFileAsync(userName, message, ms);
+                            while (totalRead < fileSize && (bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                            {
+                                await ms.WriteAsync(buffer, 0, bytesRead);
+                                totalRead += bytesRead;
+                            }
 
+                            // Сохранить файл
+                            ms.Position = 0; // Скинуть позицию обратно на начало потока
+                            await ReceiveFileAsync(userName, fileName, ms);
                         }
-
                         break;
+
 
                     case "REQUEST_FILE":
                        // await SendFileToClient(userName, message);
@@ -113,23 +126,46 @@ class Program
     private static async Task ReceiveFileAsync(string userName, string fileName, Stream fileStream)
 
     {
-        int bufferSize = 10485760;
-        string filePath = Path.Combine("C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\Server\\Files", fileName); // Директория для сохранения файлов
 
-        Directory.CreateDirectory("C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\Server\\Files"); // Создаем директорию, если она не существует
+        int bufferSize = 52428800; // 50 МБ
+
+        string filePath = Path.Combine("C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\Server\\Files", fileName);
+
+
+        // Проверка наличия файла с тем же именем и добавление уникального идентификатора
+
+        int fileCounter = 1;
+
+        while (File.Exists(filePath))
+
+        {
+
+            string newFileName = Path.GetFileNameWithoutExtension(fileName) + $"_copy{fileCounter++}" + Path.GetExtension(fileName);
+
+            filePath = Path.Combine("C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\Server\\Files", newFileName);
+
+        }
+
+
+        Directory.CreateDirectory("C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\Server\\Files");
 
 
         using (var fileStreamToSave = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
 
         {
 
-            await fileStream.CopyToAsync(fileStreamToSave);
+            await fileStream.CopyToAsync(fileStreamToSave, bufferSize);
+
+            await fileStreamToSave.FlushAsync(); // Сбросить данные в файл сразу же
 
         }
 
-        await NotifyFileReceived(userName, fileName);
+
+        await NotifyFileReceived(userName, fileName); // Уведомить о получении файла
 
     }
+
+
 
 
     private static async Task NotifyFileReceived(string userName, string fileName)

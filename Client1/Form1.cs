@@ -240,14 +240,14 @@ namespace Client1
 
                     FileInfo fileInfo = new FileInfo(filePath);
 
-                    const long maxFileSize = 10 * 1024 * 1024; // 10 МБ
+                    const long maxFileSize = 50 * 1024 * 1024; // 50 МБ
 
 
                     if (fileInfo.Length > maxFileSize)
 
                     {
 
-                        MessageBox.Show($"Ошибка: Файл слишком большой. Максимально допустимый размер - 10 МБ.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show($"Ошибка: Файл слишком большой. Максимально допустимый размер - 50 МБ.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                         return;
 
@@ -259,13 +259,31 @@ namespace Client1
                     await writer.WriteLineAsync($"SEND_FILE {fileName}");
 
 
+                    // Отправка размера файла
+
+                    byte[] sizeBuffer = BitConverter.GetBytes(fileInfo.Length);
+
+                    await stream.WriteAsync(sizeBuffer, 0, sizeBuffer.Length); // отправляем размер файла
+
+
                     // Отправка файла
-                    int bufferSize = 10485760;
+
+                    byte[] buffer = new byte[4096]; // буфер для передачи данных
+
+
                     using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
 
                     {
 
-                        await fileStream.CopyToAsync(stream, bufferSize);
+                        int bytesRead;
+
+                        while ((bytesRead = await fileStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+
+                        {
+
+                            await stream.WriteAsync(buffer, 0, bytesRead); // отправляем данные на сервер
+
+                        }
 
                     }
 
@@ -279,7 +297,6 @@ namespace Client1
             }
 
         }
-
         private async void button5_Click(object sender, EventArgs e)
         {
             string partnerUserName = textBox2.Text;
