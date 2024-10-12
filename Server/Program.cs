@@ -73,40 +73,52 @@ class Program
 
 
                     case "SEND_FILE":
-                        if (clients[userName].PartnerUserName == null) // Проверка на наличие подключения к партнеру
 
-                        {
-
-                            await writer.WriteLineAsync("ERROR: Вы не можете отправлять файлы, пока не выберете партнера.");
-
-                            break;
-
-                        }
                         string fileName = message;
 
+
                         // Чтение размера файла из потока данных
+
                         byte[] sizeBuffer = new byte[8];
+
                         await stream.ReadAsync(sizeBuffer, 0, sizeBuffer.Length);
+
                         long fileSize = BitConverter.ToInt64(sizeBuffer, 0);
 
+
                         // Подготовка для сохранения файла
+
                         var buffer = new byte[4096]; // Размер буфера для передачи
 
+
                         using (var ms = new MemoryStream())
+
                         {
+
                             int bytesRead;
+
                             long totalRead = 0;
 
+
                             while (totalRead < fileSize && (bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+
                             {
+
                                 await ms.WriteAsync(buffer, 0, bytesRead);
+
                                 totalRead += bytesRead;
+
                             }
 
+
                             // Сохранить файл
+
                             ms.Position = 0; // Скинуть позицию обратно на начало потока
+
                             await ReceiveFileAsync(userName, fileName, ms);
+
                         }
+
                         break;
 
 
@@ -163,9 +175,11 @@ class Program
 
         {
 
+            // Использование CopyToAsync для надежной записи всех данных
+
             await fileStream.CopyToAsync(fileStreamToSave, bufferSize);
 
-            await fileStreamToSave.FlushAsync(); // Сбросить данные в файл сразу же
+            await fileStreamToSave.FlushAsync(); // Сбросить данные в файл
 
         }
 
@@ -173,7 +187,6 @@ class Program
         await NotifyFileReceived(userName, fileName); // Уведомить о получении файла
 
     }
-
 
 
 

@@ -284,13 +284,13 @@ namespace Client1
                             await stream.WriteAsync(buffer, 0, bytesRead); // отправляем данные на сервер
 
                         }
-  
+
                     }
+
 
                     richTextBox1.AppendText($"Файл {fileName} был отправлен.\n");
 
                     listBox1.Items.Add(fileName);
-
 
                 }
 
