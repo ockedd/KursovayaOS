@@ -5,10 +5,17 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
+class ClientInfo
+{
+    public StreamWriter Writer { get; set; }
+    public StreamReader Reader { get; set; }
+    public string PartnerUserName { get; set; }
+}
+
 class Program
 {
     private static TcpListener listener;
-    private static ConcurrentDictionary<string, (StreamWriter Writer, string PartnerUserName)> clients = new ConcurrentDictionary<string, (StreamWriter, string)>();
+    private static ConcurrentDictionary<string, ClientInfo> clients = new ConcurrentDictionary<string, ClientInfo>();
 
     static async Task Main()
     {
@@ -31,36 +38,28 @@ class Program
         using (var writer = new StreamWriter(stream) { AutoFlush = true })
         {
             while (userName == null)
-
             {
-
                 string line1 = await reader.ReadLineAsync();
-
                 string[] commandParts = line1.Split(new[] { ' ' }, 2);
-
                 string command = commandParts[0].ToUpperInvariant();
-
                 string message = commandParts.Length > 1 ? commandParts[1] : string.Empty;
 
-
                 if (command == "SETNAME")
-
                 {
-
                     userName = await SetNameAsync(writer, message);
-
                 }
-
             }
-            clients[userName] = (writer, null); // инициализация без партнёра
+
+            clients[userName] = new ClientInfo { Writer = writer, Reader = reader, PartnerUserName = null }; // инициализация без партнёра
             Console.WriteLine($"Клиент {userName} подключен.");
-           
+
             string line;
             while ((line = await reader.ReadLineAsync()) != null)
             {
                 string[] commandParts = line.Split(new[] { ' ' }, 2);
                 string command = commandParts[0].ToUpperInvariant();
                 string message = commandParts.Length > 1 ? commandParts[1] : string.Empty;
+
                 switch (command)
                 {
                     case "SELECT":
@@ -70,13 +69,13 @@ class Program
                     case "MESSAGE":
                         await SendMessageAsync(userName, message);
                         break;
-                   
+
+
                     case "DISCONNECT":
                         Console.WriteLine($"Клиент {userName} отключился.");
                         await NotifyPartnerDisconnection(userName);
                         clients.TryRemove(userName, out _);
                         return;
-
 
                     default:
                         await writer.WriteLineAsync("ERROR: Неправильная команда.");
@@ -86,26 +85,18 @@ class Program
         }
     }
 
-  
+
     private static async Task<string> SetNameAsync(StreamWriter writer, string name)
-
     {
-
         string userName = name.Trim();
 
         if (string.IsNullOrWhiteSpace(userName) || clients.ContainsKey(userName))
-
         {
-
             await writer.WriteLineAsync("ERROR: Имя занято или некорректно");
-
             return null; // имя не задано
-
         }
- 
 
         return userName; // возвращаем установленное имя
-
     }
 
     private static async Task SelectPartnerAsync(string userName, string partnerUserName)
@@ -118,8 +109,8 @@ class Program
 
         if (clients.ContainsKey(partnerUserName))
         {
-            clients[userName] = (clients[userName].Writer, partnerUserName);
-            clients[partnerUserName] = (clients[partnerUserName].Writer, userName);
+            clients[userName].PartnerUserName = partnerUserName;
+            clients[partnerUserName].PartnerUserName = userName;
             await clients[userName].Writer.WriteLineAsync($"Вы подключены к клиенту {partnerUserName}");
             await clients[partnerUserName].Writer.WriteLineAsync($"Вы подключены к клиенту {userName}");
         }
@@ -141,7 +132,6 @@ class Program
     private static async Task SendMessageAsync(string userName, string message)
     {
         var partnerUserName = clients[userName].PartnerUserName;
-        // Отправляем сообщение партнеру, если он существует
         if (partnerUserName != null && clients.ContainsKey(partnerUserName))
         {
             await clients[partnerUserName].Writer.WriteLineAsync($"Сообщение от {userName}: {message}");
@@ -151,4 +141,7 @@ class Program
             await clients[userName].Writer.WriteLineAsync("ERROR: Нет подключенного партнёра.");
         }
     }
-}
+    }
+
+
+
