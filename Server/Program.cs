@@ -138,7 +138,7 @@ class Program
 
         int bufferSize = 52428800; // 50 МБ
 
-        string filePath = Path.Combine("C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\Server\\Files", fileName);
+        string filePath = Path.Combine("Files", fileName);
 
 
         // Проверка наличия файла с тем же именем и добавление уникального идентификатора
@@ -151,12 +151,12 @@ class Program
 
             string newFileName = Path.GetFileNameWithoutExtension(fileName) + $"_copy{fileCounter++}" + Path.GetExtension(fileName);
 
-            filePath = Path.Combine("\\Server\\Files", newFileName);
+            filePath = Path.Combine("Files", newFileName);
 
         }
 
 
-        Directory.CreateDirectory("Server\\Files");
+        Directory.CreateDirectory("Files");
 
 
         using (var fileStreamToSave = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))

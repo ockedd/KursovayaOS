@@ -3,11 +3,11 @@
   "WorkspaceRootPath": "C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{4461A580-A301-477B-8F10-44F85918EC17}|Client1\\Client1.csproj|C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\client1\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{4461A580-A301-477B-8F10-44F85918EC17}|Client1\\Client1.csproj|c:\\users\\danilka\\source\\repos\\kursovayaoc\\client1\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{4461A580-A301-477B-8F10-44F85918EC17}|Client1\\Client1.csproj|solutionrelative:client1\\form1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{ED3DD95B-169D-46F7-B2AE-B2CCF9F140C4}|Server\\Server.csproj|c:\\users\\danilka\\source\\repos\\kursovayaoc\\server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{ED3DD95B-169D-46F7-B2AE-B2CCF9F140C4}|Server\\Server.csproj|C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{ED3DD95B-169D-46F7-B2AE-B2CCF9F140C4}|Server\\Server.csproj|solutionrelative:server\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -53,7 +53,7 @@
               "RelativeDocumentMoniker": "Server\\Program.cs",
               "ToolTip": "C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\Server\\Program.cs",
               "RelativeToolTip": "Server\\Program.cs",
-              "ViewState": "AQIAAJAAAAAAAAAAAAAIwKAAAAAAAAAA",
+              "ViewState": "AQIAAIcAAAAAAAAAAAAIwJoAAAAAAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-10-06T14:55:03.901Z",
               "EditorCaption": ""
@@ -68,8 +68,7 @@
               "RelativeToolTip": "Client1\\Form1.Designer.cs",
               "ViewState": "AQIAAJwAAAAAAAAAAAD4v6kAAAAkAAAA",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-10-06T14:53:58.417Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-10-06T14:53:58.417Z"
             },
             {
               "$type": "Document",
@@ -80,8 +79,7 @@
               "ToolTip": "C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\Client1\\Form1.cs [\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440]",
               "RelativeToolTip": "Client1\\Form1.cs [\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-10-06T17:18:54.435Z",
-              "EditorCaption": " [\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0442\u043E\u0440]"
+              "WhenOpened": "2024-10-06T17:18:54.435Z"
             },
             {
               "$type": "Document",
