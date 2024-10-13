@@ -124,39 +124,132 @@ namespace Client1
 
 
         private async void ReceiveMessages()
+
         {
+
             try
+
             {
+
                 while (true)
+
                 {
+
                     string message = await reader.ReadLineAsync();
+
                     if (message != null)
+
                     {
-                        this.BeginInvoke((Action)(() =>
+
+                        this.BeginInvoke((Action)(async () =>
+
                         {
+
                             richTextBox1.AppendText(message + Environment.NewLine);
 
+
                             // Если сообщение содержит информацию о полученном файле
+
                             if (message.StartsWith("Получен файл: "))
+
                             {
+
                                 string fileName = message.Substring("Получен файл: ".Length);
+
                                 listBox1.Items.Add(fileName); // Добавление имени файла в ListBox
+
                             }
+
+
+
+                            // Если сервер отправляет файл после запроса
+
+                            if (message.StartsWith("ОТПРАВИТЬ ФАЙЛ: "))
+
+                            {
+
+                                string fileName = message.Substring("ОТПРАВИТЬ ФАЙЛ: ".Length);
+
+                                await ReceiveFileAsync(fileName);
+
+                            }
+
                         }));
+
                     }
+
                     else
+
                     {
+
                         break;
+
                     }
+
                 }
+
             }
+
             catch (Exception ex)
+
             {
+
                 MessageBox.Show("Ошибка получения сообщения: " + ex.Message);
+
             }
+
         }
 
-       
+
+        private async Task ReceiveFileAsync(string fileName)
+
+        {
+
+            // Укажите путь для сохранения файла
+
+            string savePath = Path.Combine("C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\Client\\ReceivedFiles", fileName);
+
+            Directory.CreateDirectory(Path.GetDirectoryName(savePath));
+
+
+            using (FileStream fileStreamToSave = new FileStream(savePath, FileMode.Create, FileAccess.Write))
+
+            {
+
+                byte[] sizeBuffer = new byte[8];
+
+                await stream.ReadAsync(sizeBuffer, 0, sizeBuffer.Length); // Чтение размера файла
+
+
+                long fileSize = BitConverter.ToInt64(sizeBuffer, 0);
+
+                byte[] buffer = new byte[4096];
+
+
+                long totalRead = 0;
+
+                int bytesRead;
+
+
+                while (totalRead < fileSize && (bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+
+                {
+
+                    await fileStreamToSave.WriteAsync(buffer, 0, bytesRead);
+
+                    totalRead += bytesRead;
+
+                }
+
+
+                richTextBox1.AppendText($"Файл {fileName} сохранён.\n");
+
+            }
+
+        }
+
+
+
 
         private async void SendDisconnectMessage()
         {
@@ -288,10 +381,7 @@ namespace Client1
                     }
 
 
-                    richTextBox1.AppendText($"Файл {fileName} был отправлен.\n");
-
-                    listBox1.Items.Add(fileName);
-
+                    
                 }
 
             }
@@ -336,34 +426,14 @@ namespace Client1
             {
                 string fileName = listBox1.SelectedItem.ToString();
 
-                // Открываем диалоговое окно сохранения файла
-                using (SaveFileDialog saveFileDialog = new SaveFileDialog())
-                {
-                    saveFileDialog.FileName = fileName; // Установить имя файла по умолчанию
-                    saveFileDialog.Filter = "All files (*.*)|*.*"; // Установить фильтр файлов по типу
+                // Отправляем имя файла серверу
+                await writer.WriteLineAsync($"REQUEST_FILE {fileName}");
 
-                    if (saveFileDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        string savePath = saveFileDialog.FileName;
-                        await writer.WriteLineAsync($"REQUEST_FILE {fileName}");
-                        richTextBox1.AppendText($"Запрос на файл {fileName} отправлен.\n");
 
-                        // В ожидании получения файла с сервера
-                        byte[] buffer = new byte[1048];
-                        using (var fileStream = new FileStream(savePath, FileMode.Create, FileAccess.Write))
-                        {
-                            int bytesRead;
-                            while ((bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-                            {
-                                await fileStream.WriteAsync(buffer, 0, bytesRead);
-                            }
-                        }
-
-                        MessageBox.Show($"Файл {fileName} был успешно сохранен.");
-                    }
-                }
+                // Здесь можно добавить дополнительную логику, если необходимо
             }
         }
+
 
     }
 }

@@ -70,60 +70,11 @@ class Program
                         await SendMessageAsync(userName, message);
                         break;
 
-
-
                     case "SEND_FILE":
-
-                        string fileName = message;
-
-
-                        // Чтение размера файла из потока данных
-
-                        byte[] sizeBuffer = new byte[8];
-
-                        await stream.ReadAsync(sizeBuffer, 0, sizeBuffer.Length);
-
-                        long fileSize = BitConverter.ToInt64(sizeBuffer, 0);
-
-
-                        // Подготовка для сохранения файла
-
-                        var buffer = new byte[4096]; // Размер буфера для передачи
-
-
-                        using (var ms = new MemoryStream())
-
-                        {
-
-                            int bytesRead;
-
-                            long totalRead = 0;
-
-
-                            while (totalRead < fileSize && (bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-
-                            {
-
-                                await ms.WriteAsync(buffer, 0, bytesRead);
-
-                                totalRead += bytesRead;
-
-                            }
-
-
-                            // Сохранить файл
-
-                            ms.Position = 0; // Скинуть позицию обратно на начало потока
-
-                            await ReceiveFileAsync(userName, fileName, ms);
-
-                        }
-
+                        await HandleSendFileAsync(userName, message, stream);
                         break;
 
-
                     case "REQUEST_FILE":
-                       // await SendFileToClient(userName, message);
                         break;
                     case "DISCONNECT":
                         Console.WriteLine($"Клиент {userName} отключился.");
@@ -139,10 +90,47 @@ class Program
         }
     }
 
-    private static async Task SendFileToClient(string userName, string fileName)
+
+
+    private static async Task HandleSendFileAsync(string userName, string message, Stream stream)
     {
-       
+        var partnerUserName = clients[userName].PartnerUserName;
+        if (partnerUserName != null && clients.ContainsKey(partnerUserName))
+        {
+            string fileName = message;
+
+            // Чтение размера файла из потока данных
+            byte[] sizeBuffer = new byte[8];
+            await stream.ReadAsync(sizeBuffer, 0, sizeBuffer.Length);
+
+            long fileSize = BitConverter.ToInt64(sizeBuffer, 0);
+
+            // Подготовка для сохранения файла
+            var buffer = new byte[4096]; // Размер буфера для передачи
+
+            using (var ms = new MemoryStream())
+            {
+                int bytesRead;
+                long totalRead = 0;
+
+                while (totalRead < fileSize && (bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+                {
+                    await ms.WriteAsync(buffer, 0, bytesRead);
+                    totalRead += bytesRead;
+                }
+
+                // Сохранить файл
+                ms.Position = 0; // Сбросить позицию обратно на начало потока
+                await ReceiveFileAsync(userName, fileName, ms);
+            }
+            await clients[userName].Writer.WriteLineAsync($"Файл {fileName} был отправлен.\n");
+        }
+        else
+        {
+            await clients[userName].Writer.WriteLineAsync("ERROR: Нет подключенного партнёра.");
+        }
     }
+
 
     private static async Task ReceiveFileAsync(string userName, string fileName, Stream fileStream)
 
@@ -222,16 +210,27 @@ class Program
 
         if (clients.ContainsKey(partnerUserName))
         {
+            var selectedPartner = clients[partnerUserName];
+
+            // Проверяем, есть ли уже избранный партнер у второго клиента
+            if (selectedPartner.PartnerUserName != null)
+            {
+                await clients[userName].Writer.WriteLineAsync("ERROR: Партнёр уже подключен к другому клиенту.");
+                return;
+            }
+
             clients[userName].PartnerUserName = partnerUserName;
-            clients[partnerUserName].PartnerUserName = userName;
+            selectedPartner.PartnerUserName = userName;
+
             await clients[userName].Writer.WriteLineAsync($"Вы подключены к клиенту {partnerUserName}");
-            await clients[partnerUserName].Writer.WriteLineAsync($"Вы подключены к клиенту {userName}");
+            await selectedPartner.Writer.WriteLineAsync($"Вы подключены к клиенту {userName}");
         }
         else
         {
             await clients[userName].Writer.WriteLineAsync("ERROR: Партнёр не найден.");
         }
     }
+
 
     private static async Task NotifyPartnerDisconnection(string userName)
     {
@@ -247,7 +246,7 @@ class Program
         var partnerUserName = clients[userName].PartnerUserName;
         if (partnerUserName != null && clients.ContainsKey(partnerUserName))
         {
-            await clients[partnerUserName].Writer.WriteLineAsync($"Сообщение от {userName}: {message}");
+            await clients[partnerUserName].Writer.WriteLineAsync($"{userName}: {message}");
         }
         else
         {
