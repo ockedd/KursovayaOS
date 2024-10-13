@@ -151,12 +151,12 @@ class Program
 
             string newFileName = Path.GetFileNameWithoutExtension(fileName) + $"_copy{fileCounter++}" + Path.GetExtension(fileName);
 
-            filePath = Path.Combine("C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\Server\\Files", newFileName);
+            filePath = Path.Combine("\\Server\\Files", newFileName);
 
         }
 
 
-        Directory.CreateDirectory("C:\\Users\\Danilka\\source\\repos\\KursovayaOC\\Server\\Files");
+        Directory.CreateDirectory("Server\\Files");
 
 
         using (var fileStreamToSave = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
