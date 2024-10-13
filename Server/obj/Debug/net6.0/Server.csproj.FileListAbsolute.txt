@@ -27,3 +27,4 @@ C:\Users\mydad\source\repos\KursovayaOS\Server\obj\Debug\net6.0\refint\Server.dl
 C:\Users\mydad\source\repos\KursovayaOS\Server\obj\Debug\net6.0\Server.pdb
 C:\Users\mydad\source\repos\KursovayaOS\Server\obj\Debug\net6.0\Server.genruntimeconfig.cache
 C:\Users\mydad\source\repos\KursovayaOS\Server\obj\Debug\net6.0\ref\Server.dll
+C:\Users\mydad\source\repos\KursovayaOS\Server\obj\Debug\net6.0\Server.sourcelink.json

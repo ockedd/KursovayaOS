@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading.Tasks;
 
 class ClientInfo
@@ -10,6 +11,7 @@ class ClientInfo
     public StreamWriter Writer { get; set; }
     public StreamReader Reader { get; set; }
     public string PartnerUserName { get; set; }
+    public Stream Stream { get; set; }
 }
 
 class Program
@@ -50,7 +52,7 @@ class Program
                 }
             }
 
-            clients[userName] = new ClientInfo { Writer = writer, Reader = reader, PartnerUserName = null }; // инициализация без партнёра
+            clients[userName] = new ClientInfo { Writer = writer, Reader = reader, PartnerUserName = null, Stream = stream }; // инициализация без партнёра
             Console.WriteLine($"Клиент {userName} подключен.");
 
             string line;
@@ -75,6 +77,7 @@ class Program
                         break;
 
                     case "REQUEST_FILE":
+                        await HandleRequestFileAsync(userName, message);
                         break;
                     case "DISCONNECT":
                         Console.WriteLine($"Клиент {userName} отключился.");
@@ -88,6 +91,95 @@ class Program
                 }
             }
         }
+    }
+
+
+
+    private static async Task HandleRequestFileAsync(string userName, string message)
+
+    {
+
+        string fileName = message;
+
+        string filePath = Path.Combine("Files", fileName);
+
+
+        if (File.Exists(filePath))
+
+        {
+
+            await SendFileAsync(userName, filePath);
+
+        }
+
+        else
+
+        {
+
+            await clients[userName].Writer.WriteLineAsync("ERROR: Файл не найден.");
+
+        }
+
+    }
+
+
+    private static async Task SendFileAsync(string userName, string filePath)
+
+    {
+
+        var partnerUserName = clients[userName].PartnerUserName;
+
+
+        if (partnerUserName != null && clients.ContainsKey(partnerUserName))
+
+        {
+
+            await clients[userName].Writer.WriteLineAsync($"FILESENT {Path.GetFileName(filePath)}");
+
+
+            string fileName = Path.GetFileName(filePath);
+            FileInfo fileInfo = new FileInfo(filePath);
+
+
+            // Отправка размера файла
+
+            byte[] sizeBuffer = BitConverter.GetBytes(fileInfo.Length);
+
+            await clients[userName].Stream.WriteAsync(sizeBuffer, 0, sizeBuffer.Length); // отправляем размер файла
+
+
+            // Отправка файла
+
+            byte[] buffer = new byte[4096]; // буфер для передачи данных
+
+
+            using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+
+            {
+
+                int bytesRead;
+
+                while ((bytesRead = await fileStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+
+                {
+
+                    await clients[userName].Stream.WriteAsync(buffer, 0, bytesRead); // отправляем данные на сервер
+
+                }
+
+            }
+
+
+        }
+
+        else
+
+        {
+
+            await clients[userName].Writer.WriteLineAsync("ERROR: Нет подключенного партнёра.");
+
+        }
+
     }
 
 
@@ -149,9 +241,7 @@ class Program
 
         {
 
-            string newFileName = Path.GetFileNameWithoutExtension(fileName) + $"_copy{fileCounter++}" + Path.GetExtension(fileName);
-
-            filePath = Path.Combine("Files", newFileName);
+            break;
 
         }
 
