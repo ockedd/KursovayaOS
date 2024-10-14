@@ -120,7 +120,11 @@ namespace Client1
 
 
 
+
+
         private static readonly object _lock = new object();
+
+
 
 
         private async void ReceiveMessages()
@@ -137,31 +141,56 @@ namespace Client1
 
                     string message = await reader.ReadLineAsync();
 
+
+
                     if (message != null)
 
                     {
 
-                        this.BeginInvoke((Action)(async () =>
+                        if (message.StartsWith("FILESENT "))
 
                         {
 
-                           
-                            // Если сообщение содержит информацию о полученном файле
+                            // Сообщение о том, что файл будет отправлен
 
-                            if (message.StartsWith("Получен файл: "))
+                            string fileName = message.Substring("FILESENT ".Length);
+
+
+
+                            // Начинаем процесс получения файла
+
+                            await ReceiveFile(fileName);
+
+                        }
+
+                        else
+
+                        {
+
+                            // Обработка обычных текстовых сообщений
+
+                            this.BeginInvoke((Action)(() =>
 
                             {
 
-                                string fileName = message.Substring("Получен файл: ".Length);
+                                if (message.StartsWith("Получен файл: "))
 
-                                listBox1.Items.Add(fileName); // Добавление имени файла в ListBox
+                                {
 
-                            }
+                                    string fileName = message.Substring("Получен файл: ".Length);
 
-                                richTextBox1.AppendText(message + Environment.NewLine);
-                            
+                                    listBox1.Items.Add(fileName); // Добавление имени файла в ListBox
+                                    richTextBox1.AppendText(message + Environment.NewLine);
 
-                        }));
+                                }
+                                else
+                                {
+                                    richTextBox1.AppendText(message + Environment.NewLine);
+                                }
+
+                            }));
+
+                        }
 
                     }
 
@@ -187,8 +216,57 @@ namespace Client1
 
         }
 
+        private async Task ReceiveFile(string fileName)
 
-       
+        {
+
+            byte[] sizeBuffer = new byte[8]; // буфер для размера файла
+
+            await stream.ReadAsync(sizeBuffer, 0, sizeBuffer.Length); // чтение размера файла
+
+
+
+            long fileSize = BitConverter.ToInt64(sizeBuffer, 0);
+
+            string savePath = Path.Combine("ReceivedFiles", fileName); // Путь для сохранения файла
+
+
+            Directory.CreateDirectory("ReceivedFiles"); // Создаём директорию, если её нет
+
+
+            using (var fileStream = new FileStream(savePath, FileMode.Create, FileAccess.Write, FileShare.None))
+
+            {
+
+                byte[] buffer = new byte[4096]; // буфер для данных
+
+                long totalRead = 0;
+
+
+
+                while (totalRead < fileSize)
+
+                {
+
+                    int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+
+                    if (bytesRead == 0) break; // Если нет больше данных, прерываем
+
+
+
+                    await fileStream.WriteAsync(buffer, 0, bytesRead);
+
+                    totalRead += bytesRead;
+
+                }
+
+            }
+
+
+
+            richTextBox1.AppendText($"Файл {fileName} был успешно сохранен." + Environment.NewLine);
+
+        }
 
 
         private async void SendDisconnectMessage()

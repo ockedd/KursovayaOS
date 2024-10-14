@@ -134,9 +134,9 @@ class Program
 
         {
 
+
+
             await clients[userName].Writer.WriteLineAsync($"FILESENT {Path.GetFileName(filePath)}");
-
-
             string fileName = Path.GetFileName(filePath);
             FileInfo fileInfo = new FileInfo(filePath);
 
@@ -162,7 +162,7 @@ class Program
                 while ((bytesRead = await fileStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
 
                 {
-
+                   
                     await clients[userName].Stream.WriteAsync(buffer, 0, bytesRead); // отправляем данные на сервер
 
                 }
