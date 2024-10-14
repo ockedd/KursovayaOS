@@ -96,90 +96,46 @@ class Program
 
 
     private static async Task HandleRequestFileAsync(string userName, string message)
-
     {
-
         string fileName = message;
-
         string filePath = Path.Combine("Files", fileName);
-
-
         if (File.Exists(filePath))
-
         {
-
             await SendFileAsync(userName, filePath);
-
         }
-
         else
-
         {
-
             await clients[userName].Writer.WriteLineAsync("ERROR: Файл не найден.");
-
         }
-
     }
 
 
     private static async Task SendFileAsync(string userName, string filePath)
-
     {
-
         var partnerUserName = clients[userName].PartnerUserName;
-
-
         if (partnerUserName != null && clients.ContainsKey(partnerUserName))
-
         {
-
-
-
             await clients[userName].Writer.WriteLineAsync($"FILESENT {Path.GetFileName(filePath)}");
             string fileName = Path.GetFileName(filePath);
             FileInfo fileInfo = new FileInfo(filePath);
-
-
             // Отправка размера файла
-
             byte[] sizeBuffer = BitConverter.GetBytes(fileInfo.Length);
-
             await clients[userName].Stream.WriteAsync(sizeBuffer, 0, sizeBuffer.Length); // отправляем размер файла
-
-
             // Отправка файла
-
             byte[] buffer = new byte[4096]; // буфер для передачи данных
-
-
             using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-
             {
-
                 int bytesRead;
-
                 while ((bytesRead = await fileStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-
-                {
-                   
+                {                
                     await clients[userName].Stream.WriteAsync(buffer, 0, bytesRead); // отправляем данные на сервер
-
                 }
-
             }
-
-
         }
-
         else
-
         {
-
             await clients[userName].Writer.WriteLineAsync("ERROR: Нет подключенного партнёра.");
-
         }
-
     }
 
 
@@ -225,45 +181,23 @@ class Program
 
 
     private static async Task ReceiveFileAsync(string userName, string fileName, Stream fileStream)
-
     {
-
         int bufferSize = 52428800; // 50 МБ
-
         string filePath = Path.Combine("Files", fileName);
-
-
-        // Проверка наличия файла с тем же именем и добавление уникального идентификатора
-
+        // Проверка наличия файла с тем же именем и добавление уникального идентификатор
         int fileCounter = 1;
-
         while (File.Exists(filePath))
-
         {
-
             break;
-
         }
-
-
         Directory.CreateDirectory("Files");
-
-
         using (var fileStreamToSave = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.None))
-
         {
-
             // Использование CopyToAsync для надежной записи всех данных
-
             await fileStream.CopyToAsync(fileStreamToSave, bufferSize);
-
             await fileStreamToSave.FlushAsync(); // Сбросить данные в файл
-
         }
-
-
         await NotifyFileReceived(userName, fileName); // Уведомить о получении файла
-
     }
 
 
@@ -280,13 +214,11 @@ class Program
     private static async Task<string> SetNameAsync(StreamWriter writer, string name)
     {
         string userName = name.Trim();
-
         if (string.IsNullOrWhiteSpace(userName) || clients.ContainsKey(userName))
         {
             await writer.WriteLineAsync("ERROR: Имя занято или некорректно");
             return null; // имя не задано
         }
-
         return userName; // возвращаем установленное имя
     }
 

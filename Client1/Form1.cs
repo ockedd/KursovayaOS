@@ -118,154 +118,74 @@ namespace Client1
             }
         }
 
-
-
-
-
         private static readonly object _lock = new object();
 
-
-
-
         private async void ReceiveMessages()
-
         {
-
             try
-
             {
-
                 while (true)
-
                 {
-
                     string message = await reader.ReadLineAsync();
-
-
-
                     if (message != null)
-
                     {
-
                         if (message.StartsWith("FILESENT "))
-
                         {
-
                             // Сообщение о том, что файл будет отправлен
-
                             string fileName = message.Substring("FILESENT ".Length);
-
-
-
                             // Начинаем процесс получения файла
-
                             await ReceiveFile(fileName);
-
                         }
-
                         else
-
                         {
-
                             // Обработка обычных текстовых сообщений
-
                             this.BeginInvoke((Action)(() =>
-
                             {
-
                                 if (message.StartsWith("Получен файл: "))
-
                                 {
-
                                     string fileName = message.Substring("Получен файл: ".Length);
-
                                     listBox1.Items.Add(fileName); // Добавление имени файла в ListBox
                                     richTextBox1.AppendText(message + Environment.NewLine);
-
                                 }
                                 else
                                 {
                                     richTextBox1.AppendText(message + Environment.NewLine);
                                 }
-
                             }));
-
                         }
-
                     }
-
                     else
-
                     {
-
                         break;
-
                     }
-
                 }
-
             }
-
             catch (Exception ex)
-
             {
-
                 MessageBox.Show("Ошибка получения сообщения: " + ex.Message);
-
             }
-
         }
 
         private async Task ReceiveFile(string fileName)
-
         {
-
             byte[] sizeBuffer = new byte[8]; // буфер для размера файла
-
             await stream.ReadAsync(sizeBuffer, 0, sizeBuffer.Length); // чтение размера файла
-
-
-
             long fileSize = BitConverter.ToInt64(sizeBuffer, 0);
-
             string savePath = Path.Combine("ReceivedFiles", fileName); // Путь для сохранения файла
-
-
             Directory.CreateDirectory("ReceivedFiles"); // Создаём директорию, если её нет
-
-
             using (var fileStream = new FileStream(savePath, FileMode.Create, FileAccess.Write, FileShare.None))
-
             {
-
                 byte[] buffer = new byte[4096]; // буфер для данных
-
                 long totalRead = 0;
-
-
-
                 while (totalRead < fileSize)
-
                 {
-
                     int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-
                     if (bytesRead == 0) break; // Если нет больше данных, прерываем
-
-
-
                     await fileStream.WriteAsync(buffer, 0, bytesRead);
-
                     totalRead += bytesRead;
-
                 }
-
             }
-
-
-
             richTextBox1.AppendText($"Файл {fileName} был успешно сохранен." + Environment.NewLine);
-
         }
 
 
@@ -294,7 +214,22 @@ namespace Client1
         }
 
 
+        private async void textbox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                string message = textBox1.Text;
 
+                if (!string.IsNullOrWhiteSpace(message))
+                {
+                    // Отправляем сообщение на сервер
+                    await writer.WriteLineAsync($"MESSAGE {message}");
+                    richTextBox1.AppendText($"Вы: {message}\n");
+                    // Используем команду MESSAGE
+                    textBox1.Clear();
+                }
+            }
+        }
         private async void button1_Click(object sender, EventArgs e)
         {
             string message = textBox1.Text;
@@ -329,81 +264,39 @@ namespace Client1
         }
 
         private async void button4_Click(object sender, EventArgs e)
-
         {
-
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
-
             {
-
                 openFileDialog.InitialDirectory = "c:\\";
-
                 openFileDialog.Filter = "All files (*.*)|*.*";
-
                 openFileDialog.Title = "Выберите файл для отправки";
-
-
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
-
                 {
-
                     string filePath = openFileDialog.FileName;
-
                     FileInfo fileInfo = new FileInfo(filePath);
-
                     const long maxFileSize = 50 * 1024 * 1024; // 50 МБ
-
-
                     if (fileInfo.Length > maxFileSize)
-
                     {
-
                         MessageBox.Show($"Ошибка: Файл слишком большой. Максимально допустимый размер - 50 МБ.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-
                         return;
-
                     }
-
-
                     string fileName = Path.GetFileName(filePath);
-
                     await writer.WriteLineAsync($"SEND_FILE {fileName}");
-
-
                     // Отправка размера файла
-
                     byte[] sizeBuffer = BitConverter.GetBytes(fileInfo.Length);
-
                     await stream.WriteAsync(sizeBuffer, 0, sizeBuffer.Length); // отправляем размер файла
-
-
                     // Отправка файла
-
                     byte[] buffer = new byte[4096]; // буфер для передачи данных
-
-
                     using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-
                     {
-
                         int bytesRead;
-
                         while ((bytesRead = await fileStream.ReadAsync(buffer, 0, buffer.Length)) > 0)
-
                         {
-
                             await stream.WriteAsync(buffer, 0, bytesRead); // отправляем данные на сервер
-
                         }
-
-                    }
-
-
-                    
+                    }                   
                 }
-
             }
-
         }
         private async void button5_Click(object sender, EventArgs e)
         {
@@ -417,21 +310,14 @@ namespace Client1
         {
 
         }
-
         private void label2_Click(object sender, EventArgs e)
         {
             
         }
-
-
-
-
         private void textBox3_TextChanged(object sender, EventArgs e)
         {
 
         }
-
-
 
         private void label2_Click_1(object sender, EventArgs e)
         {
@@ -443,16 +329,10 @@ namespace Client1
             if (listBox1.SelectedItem != null)
             {
                 string fileName = listBox1.SelectedItem.ToString();
-
                 // Отправляем имя файла серверу
                 await writer.WriteLineAsync($"REQUEST_FILE {fileName}");
-
-
-                // Здесь можно добавить дополнительную логику, если необходимо
             }
         }
-
-
     }
 }
 
