@@ -143,8 +143,7 @@ class Program
     private static async Task HandleSendFileAsync(string userName, string message, Stream stream)
     {
         var partnerUserName = clients[userName].PartnerUserName;
-        if (partnerUserName != null && clients.ContainsKey(partnerUserName))
-        {
+
             string fileName = message;
 
             // Чтение размера файла из потока данных
@@ -172,11 +171,8 @@ class Program
                 await ReceiveFileAsync(userName, fileName, ms);
             }
             await clients[userName].Writer.WriteLineAsync($"Файл {fileName} был отправлен.\n");
-        }
-        else
-        {
-            await clients[userName].Writer.WriteLineAsync("ERROR: Нет подключенного партнёра.");
-        }
+        
+
     }
 
 

@@ -151,6 +151,7 @@ namespace Client1
                                 {
                                     richTextBox1.AppendText(message + Environment.NewLine);
                                 }
+                                
                             }));
                         }
                     }
@@ -282,6 +283,7 @@ namespace Client1
                     }
                     string fileName = Path.GetFileName(filePath);
                     await writer.WriteLineAsync($"SEND_FILE {fileName}");
+                   
                     // Отправка размера файла
                     byte[] sizeBuffer = BitConverter.GetBytes(fileInfo.Length);
                     await stream.WriteAsync(sizeBuffer, 0, sizeBuffer.Length); // отправляем размер файла
