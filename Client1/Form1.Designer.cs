@@ -43,6 +43,11 @@ namespace Client1
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.listBox1 = new System.Windows.Forms.ListBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.button6 = new System.Windows.Forms.Button();
+            this.listBox2 = new System.Windows.Forms.ListBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // button1
@@ -146,12 +151,65 @@ namespace Client1
             this.label2.TabIndex = 9;
             this.label2.Text = "Файлы";
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(81, 9);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(109, 20);
+            this.label3.TabIndex = 10;
+            this.label3.Text = "Собеседник: ";
+            // 
+            // button6
+            // 
+            this.button6.Location = new System.Drawing.Point(390, 5);
+            this.button6.Name = "button6";
+            this.button6.Size = new System.Drawing.Size(132, 34);
+            this.button6.TabIndex = 11;
+            this.button6.Text = "Отключиться";
+            this.button6.UseVisualStyleBackColor = true;
+            this.button6.Click += new System.EventHandler(this.button6_Click);
+            // 
+            // listBox2
+            // 
+            this.listBox2.FormattingEnabled = true;
+            this.listBox2.ItemHeight = 20;
+            this.listBox2.Location = new System.Drawing.Point(1147, 52);
+            this.listBox2.Name = "listBox2";
+            this.listBox2.Size = new System.Drawing.Size(347, 644);
+            this.listBox2.TabIndex = 12;
+            this.listBox2.SelectedIndexChanged += new System.EventHandler(this.listBox2_SelectedIndexChanged);
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(196, 9);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(0, 20);
+            this.label4.TabIndex = 13;
+            this.label4.Click += new System.EventHandler(this.label4_Click);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(1297, 18);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(92, 20);
+            this.label5.TabIndex = 14;
+            this.label5.Text = "Ваше имя: ";
+            this.label5.Click += new System.EventHandler(this.label5_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Window;
-            this.ClientSize = new System.Drawing.Size(1089, 858);
+            this.ClientSize = new System.Drawing.Size(1612, 899);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.listBox2);
+            this.Controls.Add(this.button6);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.listBox1);
             this.Controls.Add(this.textBox2);
@@ -188,5 +246,10 @@ namespace Client1
         private TextBox textBox2;
         private ListBox listBox1;
         private Label label2;
+        private Label label3;
+        private Button button6;
+        private ListBox listBox2;
+        private Label label4;
+        private Label label5;
     }
 }
