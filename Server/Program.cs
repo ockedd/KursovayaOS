@@ -92,6 +92,7 @@ class Program
                         Console.WriteLine($"Клиент {userName} отключился.");
                         await NotifyPartnerDisconnection(userName);
                         clients.TryRemove(userName, out _);
+                        await SendConnectedClientsListAsync();
                         return;
                     case "DISCONNECTFROMPART":
                         var partnerUserName = clients[userName].PartnerUserName;
@@ -164,9 +165,23 @@ class Program
             await clients[userName].Writer.WriteLineAsync("ERROR: Вы не можете выбрать себя в качестве партнёра.");
             return;
         }
-        clients[partnerUserName].Writer.WriteLineAsync($"CONNECT_REQUEST {userName}");
-        
+
+        if (clients[userName].PartnerUserName != null)
+        {
+            await clients[userName].Writer.WriteLineAsync("ERROR: Вы уже подключены к другому партнёру.");
+            return;
+        }
+
+        if (clients.ContainsKey(partnerUserName))
+        {
+            clients[partnerUserName].Writer.WriteLineAsync($"CONNECT_REQUEST {userName}");
+        }
+        else
+        {
+            await clients[userName].Writer.WriteLineAsync("ERROR: Партнёр не найден.");
+        }
     }
+
     private static async Task HandleSendFileAsync(string userName, string message, Stream stream)
     {
         var partnerUserName = clients[userName].PartnerUserName;
@@ -258,12 +273,14 @@ class Program
         {
             var selectedPartner = clients[partnerUserName];
 
+            
             // Проверяем, есть ли уже избранный партнер у второго клиента
             if (selectedPartner.PartnerUserName != null)
             {
                 await clients[userName].Writer.WriteLineAsync("ERROR: Партнёр уже подключен к другому клиенту.");
                 return;
             }
+
 
             if (clients[userName].PartnerUserName != null)
             {

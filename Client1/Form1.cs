@@ -202,7 +202,7 @@ namespace Client1
                             {
                                 if (name == UserName)
                                 {
-                                    listBox2.Items.Add(name + "(Вы)");
+                                    continue;
                                 }
                                 else
                                 {
@@ -467,6 +467,7 @@ namespace Client1
 
         private async void listBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
+
             Name = listBox2.SelectedItem.ToString();
             await writer.WriteLineAsync($"REQUEST {Name}");
         }
